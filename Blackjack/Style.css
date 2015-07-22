@@ -1,0 +1,36 @@
+﻿#numericcontrol a {
+    cursor: pointer;
+    background: #1dac2e;
+    height:25px;
+    display: inline-block;
+    margin: 0px;
+    padding: 0px 7px;
+    float: left;
+    line-height: 25px;
+    font-size: 16px;
+    color: #fff;
+    text-decoration: none;
+    width: 22px;
+}
+
+#numericcontrol input[type="text"] {
+    border: solid 1px #1dac2e;
+    height:25px;
+    float: left;
+    width: 50px;
+    padding: 1px 5px;
+}
+
+.dealer-area {
+    height: 120px;
+}
+
+.player-area {
+    height: 120px;
+    border-top: 5px groove;
+}
+
+.card {
+    position: relative;
+}
+

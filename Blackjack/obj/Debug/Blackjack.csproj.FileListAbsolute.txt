@@ -1,0 +1,5 @@
+C:\Users\davisss\documents\visual studio 2012\Projects\Blackjack\Blackjack\bin\Blackjack.dll
+C:\Users\davisss\documents\visual studio 2012\Projects\Blackjack\Blackjack\bin\Blackjack.pdb
+C:\Users\davisss\documents\visual studio 2012\Projects\Blackjack\Blackjack\obj\Debug\Blackjack.csprojResolveAssemblyReference.cache
+C:\Users\davisss\documents\visual studio 2012\Projects\Blackjack\Blackjack\obj\Debug\Blackjack.dll
+C:\Users\davisss\documents\visual studio 2012\Projects\Blackjack\Blackjack\obj\Debug\Blackjack.pdb
