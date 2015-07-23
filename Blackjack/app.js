@@ -1,12 +1,13 @@
-﻿
+﻿var $deck, $playerHand, $dealerHand, $credits, $bet;
+
 $(document).ready(function () {
     //setup the game
-    var credits = 500;
-    var deck = new Stack();
-    deck.makeDeck(6);
-    //deck.shuffleDeck(1);
-    $('.credits-total').append('Credits: ' + credits);
-    $('.button-area').append('<input id="dealButton" type="button" value="Deal" />')
+    $deck = new Stack();
+    $credits = 500;
+    $deck.makeDeck(6);
+    $deck.shuffleDeck(1);
+    $('.credits-total').html('Credits: ' + $credits);
+    $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
     $('#numericcontrol input[type="text"]').val("15");
 
     //handles the counter control
@@ -26,42 +27,63 @@ $(document).ready(function () {
         }
     });
 
-    $('#dealButton').click(function () {
+    $(document).on('click', '#dealButton', function () {
         $('.dealer-area').html('');        //clears the board
         $('.player-area').html('');
-        var playerHand = new Hand();       //sets up the game
-        var dealerHand = new Hand();
-        dealerHand.dealer = true;
+        $bet = $val;
+        $credits = $credits - $bet;
+        $('.credits-total').html('Credits: ' + $credits);
+        $playerHand = new Hand();       //sets up the game
+        $dealerHand = new Hand();
+        $dealerHand.dealer = true;
         var topCard = new Card();
 
-        topCard = deck.drawDeck(0);      //deals out 4 cards
-        playerHand.addCard(topCard);
+        topCard = $deck.drawDeck(0);      //deals out 4 cards
+        $playerHand.addCard(topCard);
         var imageString = getCardImage(topCard);
-        displayCard(playerHand, imageString);
-        playerHand.numberOfCards++;
+        displayCard($playerHand, imageString);
+        $playerHand.numberOfCards++;
 
-        topCard = deck.drawDeck(0);
-        dealerHand.addCard(topCard);
+        topCard = $deck.drawDeck(0);
+        $dealerHand.addCard(topCard);
+        //no need to do getCardImage
+        displayCard($dealerHand, imageString);
+        $dealerHand.numberOfCards++;
+
+        topCard = $deck.drawDeck(0);
+        $playerHand.addCard(topCard);
         imageString = getCardImage(topCard);
-        displayCard(dealerHand, imageString);
-        dealerHand.numberOfCards++;
+        displayCard($playerHand, imageString);
+        $playerHand.numberOfCards++;
 
-        topCard = deck.drawDeck(0);
-        playerHand.addCard(topCard);
+        topCard = $deck.drawDeck(0);
+        $dealerHand.addCard(topCard);
         imageString = getCardImage(topCard);
-        displayCard(playerHand, imageString);
-        playerHand.numberOfCards++;
+        displayCard($dealerHand, imageString);
+        $dealerHand.numberOfCards++;
 
-        topCard = deck.drawDeck(0);
-        dealerHand.addCard(topCard);
-        imageString = getCardImage(topCard);
-        displayCard(dealerHand, imageString);
-        dealerHand.numberOfCards++;
+        $playerHand.getHandValue();
+        $dealerHand.getHandValue();
 
-        playerHand.getHandValue();
-        dealerHand.getHandValue();
+        doPlayerTurn($playerHand, $dealerHand);
+    });
 
-        //getOptions(playerHand, dealerHand);
+    $(document).on('click', '#hitButton', function () {
+        var topCard = new Card();
+        topCard = $deck.drawDeck(0);
+        $playerHand.addCard(topCard);
+        var imageString = getCardImage(topCard);
+        displayCard($playerHand, imageString);
+        $playerHand.numberOfCards++;
+
+        $playerHand.getHandValue();
+
+        doPlayerTurn($playerHand, $dealerHand);
+    });
+
+    $(document).on('click', '#standButton', function () {
+        doDealerTurn($dealerHand);
+        doScoring($playerHand, $dealerHand);
     });
 });
 
@@ -87,13 +109,13 @@ function Hand() {
     this.total = 0;      //total value of hand
     this.numberOfCards = 0;       //total number of cards in hand
     this.dealer = false;        //whether the hand belongs to the player or dealer
+    this.aceCount = 0;
 
     this.countCards = stackCardCount;
     this.addCard = stackAddCard;
     this.combineCards = stackCombine;
     this.getHandValue = stackGetSum;
 }
-
 
 function stackMakeDeck(n) {
     //creates a stack containing n decks
@@ -164,14 +186,14 @@ function stackCombine(stack) {
 function stackGetSum() {
     //manipulates the ranks of all the cards in a hand to numbers and sums them up
     var i = 0;
-    var aces = 0;
     this.total = 0;
+    this.aceCount = 0;
     while (i < this.numberOfCards) {
         switch (this.cards[i].rank) {
-            case 'A': 
-                this.total = this.total + 1;
+            case 'A':
+                this.total = this.total + 11;
                 i++;
-                aces++;
+                this.aceCount++;
                 break;
             case 'J':
                 this.total = this.total + 10;
@@ -189,9 +211,6 @@ function stackGetSum() {
                 this.total = this.total + parseInt(this.cards[i].rank);
                 i++;
         }
-    }
-    if (aces > 0 && this.total < 12) {
-        this.total = this.total + 10;
     }
 }
 
@@ -371,15 +390,133 @@ function getCardImage(card) {
 
 function displayCard(hand, string) {
     //adds the image to the appropriate div
-        if (hand.dealer == false) {
-            $('.player-area').append('<img src="' + string + '" class="card" />');
+    if (hand.dealer == false) {
+        $('.player-area').append('<img src="' + string + '" class="card" />');
+    }
+    else {
+        if (hand.numberOfCards == 0) {        //if it's the dealer's first card, display the card face down image
+            $('.dealer-area').append('<img src="/Images/b1fv.png" class="card face-down">');
         }
         else {
-            if (hand.numberOfCards == 0) {        //if it's the dealer's first card, display the card face down image
-                $('.dealer-area').append('<img src="/Images/b1fv.png" class="card">');
-            }
-            else {
-                $('.dealer-area').append('<img src="' + string + '" class="card" />');
-            }
+            $('.dealer-area').append('<img src="' + string + '" class="card" />');
         }
     }
+}
+
+function doPlayerTurn($playerHand, $dealerHand) {
+    //determine the game state and provide options
+    if ($dealerHand.total == 21) {
+        if ($playerHand.total == 21) {            //both players have blackjack
+            var imageString;
+            imageString = getCardImage($dealerHand.cards[0]);
+            $('.face-down').attr('src', imageString);
+            $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
+            $credits = $credits + $bet
+            $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
+        }
+        else {                                 //dealer has blackjack
+            var imageString;
+            imageString = getCardImage($dealerHand.cards[0]);
+            $('.face-down').attr('src', imageString);
+            $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
+        }
+    }
+    else if ($playerHand.numberOfCards == 2) {
+        if ($playerHand.cards[0].rank == $playerHand.cards[1].rank) {         //player has two cards of same rank
+            $('.button-area').html('<input id="standButton" type="button" value="Stand" /><input id="hitButton" type="button" value="Hit" /><input id="splitButton" type="button" value="Split" /><input id="ddButton" type="button" value="Double" />')
+        }
+        else if ($playerHand.total < 21) {                                  //player has two cards less than 21
+            $('.button-area').html('<input id="standButton" type="button" value="Stand" /><input id="hitButton" type="button" value="Hit" /><input id="ddButton" type="button" value="Double" />')
+        }
+        else {                                                             //player has blackjack
+            $credits = $credits + parseInt($bet * 2.5);
+            var imageString;
+            imageString = getCardImage($dealerHand.cards[0]);
+            $('.face-down').attr('src', imageString);
+            $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
+        }
+    }
+    else {
+        if ($playerHand.total < 21) {            //player has more than two cards less than 21
+            $('.button-area').html('<input id="standButton" type="button" value="Stand" /><input id="hitButton" type="button" value="Hit" />')
+        }
+        else if ($playerHand.total > 21) {               //check for aces
+            if ($playerHand.aceCount > 0) {              //player has over 21, but has an ace
+                $playerHand.total = $playerHand.total - 10;
+                doPlayerTurn($playerHand, $dealerHand);
+            }
+            else {                                     //player has over 21 with no ace
+                var imageString;
+                imageString = getCardImage($dealerHand.cards[0]);
+                $('.face-down').attr('src', imageString);
+                $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
+            }
+        }
+        else {                              //player has 21
+            doDealerTurn($dealerHand);
+        }
+    }
+}
+
+function doDealerTurn($dealerHand) {
+    var endTurn = false;
+    var imageString;
+    imageString = getCardImage($dealerHand.cards[0]);
+    $('.face-down').attr('src', imageString);
+    while (endTurn == false) {
+        if ($dealerHand.total < 17) {
+            var topCard = $deck.drawDeck(0);
+            imageString = getCardImage(topCard);
+            displayCard($dealerHand, imageString);
+            $dealerHand.addCard(topCard);
+            $dealerHand.numberOfCards++;
+            $dealerHand.getHandValue();
+        }
+        else if ($dealerHand.total == 17) {
+            if ($dealerHand.aceCount == 0) {
+                endTurn = true;
+            }
+            else {          
+                var topCard = $deck.drawDeck(0);
+                imageString = getCardImage(topCard);
+                displayCard($dealerHand, imageString);
+                $dealerHand.addCard(topCard);
+                $dealerHand.numberOfCards++;
+                $dealerHand.getHandValue();
+            }
+        }
+        else if ($dealerHand.total > 21) {
+            if ($dealerHand.aceCount > 0) {
+                $dealerHand.total = $dealerHand.total - 10;
+                $dealerHand.aceCount--;
+            }
+            else {
+                endTurn = true;
+            }
+        }
+        else {
+            endTurn = true;
+        }
+    }
+}
+
+function doScoring($playerHand, $dealerHand) {
+    if ($dealerHand.total > 21) {         //dealer busts
+        $credits = $credits + parseInt($bet * 2);
+        $('.credits-total').html('Credits: ' + $credits);
+        $('.button-area').html('<input id="dealButton" type="button" value="Deal" /> You win!')
+    }
+    else if ($playerHand.total > $dealerHand.total) {      //player score higher
+        $credits = $credits + parseInt($bet * 2);
+        $('.credits-total').html('Credits: ' + $credits);
+        $('.button-area').html('<input id="dealButton" type="button" value="Deal" /> You win!')
+    }
+    else if ($playerHand.total == $dealerHand.total) {   //push
+        $credits = $credits + $bet
+        $('.credits-total').html('Credits: ' + $credits);
+        $('.button-area').html('<input id="dealButton" type="button" value="Deal" /> Push')
+    }
+    else {                                           //dealer score higher
+        $('.button-area').html('<input id="dealButton" type="button" value="Deal" /> You lose.')
+    }
+}
