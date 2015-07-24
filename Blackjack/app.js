@@ -1,4 +1,4 @@
-﻿var $deck, $playerHand, $dealerHand, $credits, $bet;
+﻿var $deck, $playerHand1, $dealerHand, $credits, $bet, $playerHand2, $playerHand3, $playerHand4;
 
 $(document).ready(function () {
     //setup the game
@@ -30,19 +30,19 @@ $(document).ready(function () {
     $(document).on('click', '#dealButton', function () {
         $('.dealer-area').html('');        //clears the board
         $('.player-area').html('');
-        $bet = $val;
+        $bet = parseInt($val);
         $credits = $credits - $bet;
         $('.credits-total').html('Credits: ' + $credits);
-        $playerHand = new Hand();       //sets up the game
+        $playerHand1 = new Hand();       //sets up the game
         $dealerHand = new Hand();
         $dealerHand.dealer = true;
         var topCard = new Card();
 
         topCard = $deck.drawDeck(0);      //deals out 4 cards
-        $playerHand.addCard(topCard);
+        $playerHand1.addCard(topCard);
         var imageString = getCardImage(topCard);
-        displayCard($playerHand, imageString);
-        $playerHand.numberOfCards++;
+        displayCard($playerHand1, imageString);
+        $playerHand1.numberOfCards++;
 
         topCard = $deck.drawDeck(0);
         $dealerHand.addCard(topCard);
@@ -51,10 +51,10 @@ $(document).ready(function () {
         $dealerHand.numberOfCards++;
 
         topCard = $deck.drawDeck(0);
-        $playerHand.addCard(topCard);
+        $playerHand1.addCard(topCard);
         imageString = getCardImage(topCard);
-        displayCard($playerHand, imageString);
-        $playerHand.numberOfCards++;
+        displayCard($playerHand1, imageString);
+        $playerHand1.numberOfCards++;
 
         topCard = $deck.drawDeck(0);
         $dealerHand.addCard(topCard);
@@ -62,28 +62,52 @@ $(document).ready(function () {
         displayCard($dealerHand, imageString);
         $dealerHand.numberOfCards++;
 
-        $playerHand.getHandValue();
+        $playerHand1.getHandValue();
         $dealerHand.getHandValue();
 
-        doPlayerTurn($playerHand, $dealerHand);
+        if (checkForBlackjack($dealerHand) == true) {
+            if (checkForBlackjack($playerHand1 == true)) {            //both players have blackjack
+                var creditChange = 0;
+                doCreditChange(creditChange);
+                imageString = getCardImage(dh.cards[0]);
+                $('.face-down').attr('src', imageString);
+                $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
+            }
+            else {                                 //dealer has blackjack
+                var creditChange = -1;
+                doCreditChange(creditChange);
+                imageString = getCardImage(dh.cards[0]);
+                $('.face-down').attr('src', imageString);
+                $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
+            }
+        }
+        else {
+            doPlayerTurn($playerHand1, $dealerHand);
+        }
     });
 
     $(document).on('click', '#hitButton', function () {
         var topCard = new Card();
         topCard = $deck.drawDeck(0);
-        $playerHand.addCard(topCard);
+        $playerHand1.addCard(topCard);
         var imageString = getCardImage(topCard);
-        displayCard($playerHand, imageString);
-        $playerHand.numberOfCards++;
+        displayCard($playerHand1, imageString);
+        $playerHand1.numberOfCards++;
 
-        $playerHand.getHandValue();
+        $playerHand1.getHandValue();
 
-        doPlayerTurn($playerHand, $dealerHand);
+        doPlayerTurn($playerHand1, $dealerHand);
     });
 
     $(document).on('click', '#standButton', function () {
         doDealerTurn($dealerHand);
-        doScoring($playerHand, $dealerHand);
+        doScoring($playerHand1, $dealerHand);
+    });
+
+    $(document).on('click', '#splitButton', function () {
+        //increase a count numTimesSplit
+        //make a new hand named on how many
+        //take a card from playerHand
     });
 });
 
@@ -403,92 +427,91 @@ function displayCard(hand, string) {
     }
 }
 
-function doPlayerTurn($playerHand, $dealerHand) {
-    //determine the game state and provide options
-    if ($dealerHand.total == 21) {
-        if ($playerHand.total == 21) {            //both players have blackjack
-            var imageString;
-            imageString = getCardImage($dealerHand.cards[0]);
-            $('.face-down').attr('src', imageString);
-            $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
-            $credits = $credits + $bet
-            $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
-        }
-        else {                                 //dealer has blackjack
-            var imageString;
-            imageString = getCardImage($dealerHand.cards[0]);
-            $('.face-down').attr('src', imageString);
-            $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
-        }
+function checkForBlackjack(hand) {
+    if (hand.total == 21) {
+        return true;
     }
-    else if ($playerHand.numberOfCards == 2) {
-        if ($playerHand.cards[0].rank == $playerHand.cards[1].rank) {         //player has two cards of same rank
+    else {
+        return false;
+    }
+}
+
+function doPlayerTurn(ph, dh) {
+    //determine the game state and provide options
+    if (ph.numberOfCards == 2) {
+        if (ph.cards[0].rank == ph.cards[1].rank) {         //player has two cards of same rank
+            //make sure that you haven't already split 3 times - if so do not show the button, if not show the button
             $('.button-area').html('<input id="standButton" type="button" value="Stand" /><input id="hitButton" type="button" value="Hit" /><input id="splitButton" type="button" value="Split" /><input id="ddButton" type="button" value="Double" />')
         }
-        else if ($playerHand.total < 21) {                                  //player has two cards less than 21
+        else if (ph.total < 21) {                                  //player has two cards less than 21
             $('.button-area').html('<input id="standButton" type="button" value="Stand" /><input id="hitButton" type="button" value="Hit" /><input id="ddButton" type="button" value="Double" />')
         }
         else {                                                             //player has blackjack
-            $credits = $credits + parseInt($bet * 2.5);
+            var creditChange = parseInt($bet * 2.5);
+            doCreditChange(creditChange);
             var imageString;
-            imageString = getCardImage($dealerHand.cards[0]);
+            imageString = getCardImage(dh.cards[0]);
             $('.face-down').attr('src', imageString);
             $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
         }
     }
     else {
-        if ($playerHand.total < 21) {            //player has more than two cards less than 21
+        if (ph.total < 21) {            //player has more than two cards less than 21
             $('.button-area').html('<input id="standButton" type="button" value="Stand" /><input id="hitButton" type="button" value="Hit" />')
         }
-        else if ($playerHand.total > 21) {               //check for aces
-            if ($playerHand.aceCount > 0) {              //player has over 21, but has an ace
-                $playerHand.total = $playerHand.total - 10;
-                doPlayerTurn($playerHand, $dealerHand);
+        else if (ph.total > 21) {               //check for aces
+            if (ph.aceCount > 0) {              //player has over 21, but has an ace
+                ph.total = ph.total - 10;
+                ph.aceCount--;
+                doPlayerTurn(ph, dh);
             }
             else {                                     //player has over 21 with no ace
+                var creditChange = -1;
+                doCreditChange(creditChange);
                 var imageString;
-                imageString = getCardImage($dealerHand.cards[0]);
+                imageString = getCardImage(dh.cards[0]);
                 $('.face-down').attr('src', imageString);
                 $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
             }
         }
         else {                              //player has 21
-            doDealerTurn($dealerHand);
+            doDealerTurn(dh);
+            doScoring(ph, dh);
         }
     }
 }
 
-function doDealerTurn($dealerHand) {
+function doDealerTurn(dh) {
     var endTurn = false;
     var imageString;
-    imageString = getCardImage($dealerHand.cards[0]);
+    imageString = getCardImage(dh.cards[0]);
     $('.face-down').attr('src', imageString);
     while (endTurn == false) {
-        if ($dealerHand.total < 17) {
+        if (dh.total < 17) {
             var topCard = $deck.drawDeck(0);
             imageString = getCardImage(topCard);
-            displayCard($dealerHand, imageString);
-            $dealerHand.addCard(topCard);
-            $dealerHand.numberOfCards++;
-            $dealerHand.getHandValue();
+            displayCard(dh, imageString);
+            dh.addCard(topCard);
+            dh.numberOfCards++;
+            dh.getHandValue();
         }
-        else if ($dealerHand.total == 17) {
-            if ($dealerHand.aceCount == 0) {
+        else if (dh.total == 17) {
+            if (dh.aceCount == 0) {
                 endTurn = true;
             }
             else {          
                 var topCard = $deck.drawDeck(0);
                 imageString = getCardImage(topCard);
-                displayCard($dealerHand, imageString);
-                $dealerHand.addCard(topCard);
-                $dealerHand.numberOfCards++;
-                $dealerHand.getHandValue();
+                displayCard(dh, imageString);
+                dh.addCard(topCard);
+                dh.numberOfCards++;
+                dh.getHandValue();
             }
         }
-        else if ($dealerHand.total > 21) {
-            if ($dealerHand.aceCount > 0) {
-                $dealerHand.total = $dealerHand.total - 10;
-                $dealerHand.aceCount--;
+        else if (dh.total > 21) {
+            if (dh.aceCount > 0) {
+                dh.total = dh.total - 10;
+                dh.aceCount--;
             }
             else {
                 endTurn = true;
@@ -500,23 +523,42 @@ function doDealerTurn($dealerHand) {
     }
 }
 
-function doScoring($playerHand, $dealerHand) {
-    if ($dealerHand.total > 21) {         //dealer busts
-        $credits = $credits + parseInt($bet * 2);
-        $('.credits-total').html('Credits: ' + $credits);
-        $('.button-area').html('<input id="dealButton" type="button" value="Deal" /> You win!')
+function doScoring(ph, dh) {
+    if (dh.total > 21) {         //dealer busts
+        var creditChange = parseInt($bet * 2);
+        doCreditChange(creditChange);
+        $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
     }
-    else if ($playerHand.total > $dealerHand.total) {      //player score higher
-        $credits = $credits + parseInt($bet * 2);
-        $('.credits-total').html('Credits: ' + $credits);
-        $('.button-area').html('<input id="dealButton" type="button" value="Deal" /> You win!')
+    else if (ph.total > dh.total) {      //player score higher
+        var creditChange = parseInt($bet * 2);
+        doCreditChange(creditChange);
+        $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
     }
-    else if ($playerHand.total == $dealerHand.total) {   //push
-        $credits = $credits + $bet
-        $('.credits-total').html('Credits: ' + $credits);
-        $('.button-area').html('<input id="dealButton" type="button" value="Deal" /> Push')
+    else if (ph.total == dh.total) {   //push
+        var creditChange = 0;
+        doCreditChange(creditChange);
+        $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
     }
     else {                                           //dealer score higher
-        $('.button-area').html('<input id="dealButton" type="button" value="Deal" /> You lose.')
+        var creditChange = -1;
+        doCreditChange(creditChange);
+        $('.button-area').html('<input id="dealButton" type="button" value="Deal" />')
+    }
+}
+
+function doCreditChange(cc) {
+    if (cc > 0) {
+        $credits = $credits + cc;
+        $('.credits-total').html('Credits: ' + $credits);
+        $('.credits-total').append('<br />+ ' + cc);
+    }
+    else if (cc < 0) {
+        $('.credits-total').html('Credits: ' + $credits);
+        $('.credits-total').append('<br />- ' + $bet);
+    }
+    else {
+        $credits = $credits + $bet;
+        $('.credits-total').html('Credits: ' + $credits);
+        $('.credits-total').append('<br />Push');
     }
 }
